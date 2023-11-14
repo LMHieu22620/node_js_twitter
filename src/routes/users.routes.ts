@@ -1,11 +1,44 @@
 import { Request, Response, Router } from 'express'
-import { loginController, registerController } from '~/controllers/users.controllers'
-import { loginValidator, registerValidatorSchema } from '~/middlewares/users.middlewares'
+import {
+  loginController,
+  logoutController,
+  registerController,
+  verifyEmailController
+} from '~/controllers/users.controllers'
+import {
+  accessTokenValidator,
+  loginValidator,
+  refreshTokenValidator,
+  registerValidatorSchema,
+  verifyEmailTokenValidator
+} from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handlers'
 
 const usersRouter = Router()
 
-usersRouter.post('/login', loginValidator, loginController)
+/*
+ * Description: Login a user
+ * Path: /login
+ * Method:POST
+ * Body:{email:string,password:string}
+ */
+usersRouter.post('/login', loginValidator, wrapRequestHandler(loginController))
+/*
+ * Description: Login a user
+ * Path: /register
+ * Method:POST
+ * Body:{email:string,password:string,confirm_password:string,date_of_birth:ISO8601}
+ */
 usersRouter.post('/register', registerValidatorSchema, wrapRequestHandler(registerController))
+/*
+ * Description: Login a user
+ * Path: /logout
+ * Method:POST
+ * Header:{Authorization: Bearer <access_token>}
+ * Body:{refresh_token:string}
+ */
+usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapRequestHandler(logoutController))
+
+usersRouter.post('/verify-email', verifyEmailTokenValidator, wrapRequestHandler(verifyEmailController))
 
 export default usersRouter
