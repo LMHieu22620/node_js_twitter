@@ -48,6 +48,19 @@ class UsersService {
       privateKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string
     })
   }
+  private forgotPasswordToken(user_id: string) {
+    return signToken({
+      payload: {
+        user_id,
+        token_type: TokenType.ForgotPasswordToken
+      },
+      options: {
+        expiresIn: process.env.FORGOT_PASSWORD_TOKEN_EXPIRES_IN
+      },
+      privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_VERIFY_TOKEN as string
+    })
+  }
+
   private signAccessTokenAndRefreshToken = (user_id: string) => {
     return Promise.all([this.signAccessToken(user_id), this.signRefreshToken(user_id)])
   }
@@ -124,6 +137,84 @@ class UsersService {
     }
   }
 
+  async resendVerifyEmail(user_id: string) {
+    const email_verify_token = await this.emailVerifyToken(user_id)
+    console.log('Rensend verify email: ', email_verify_token)
+
+    databaseService.users.updateOne(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          email_verify_token
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+
+    // const [access_token, refresh_token] = token
+    return {
+      message: USERS_MESSAGE.RESEND_VERIFY_EMAIL_SUCCESS
+    }
+  }
+
+  async forgotPassword(user_id: string) {
+    const forgot_password_token = await this.forgotPasswordToken(user_id)
+    console.log('Rensend verify forgot password: ', forgot_password_token)
+
+    databaseService.users.updateOne(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          forgot_password_token
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+
+    // const [access_token, refresh_token] = token
+    return {
+      message: USERS_MESSAGE.CHECK_EMAIL_TO_RESET_PASSWORD
+    }
+  }
+  async resetForgotPassword(user_id: string, password: string) {
+    await databaseService.users.updateOne(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          password: hashPassword(password),
+          forgot_password_token: ''
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+
+    // const [access_token, refresh_token] = token
+    return {
+      message: USERS_MESSAGE.RESET_PASSWORD_SUCCESS
+    }
+  }
+  async getMeProfile(user_id: string) {
+    const result = await databaseService.users.findOne(
+      { _id: new ObjectId(user_id) },
+      {
+        projection: {
+          password: 0,
+          email_verify_token: 0,
+          forgot_password_token: 0
+        }
+      }
+    )
+
+    return {
+      result
+    }
+  }
   async checkEmailExist(email: string) {
     const user = await databaseService.users.findOne({ email })
     return user
