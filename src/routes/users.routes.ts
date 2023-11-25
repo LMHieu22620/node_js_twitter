@@ -7,7 +7,9 @@ import {
   registerController,
   resendVerifyEmailController,
   resetForgotPasswordController,
-  verifyEmailController
+  updateMeController,
+  verifyEmailController,
+  verifyForgotPasswordController
 } from '~/controllers/users.controllers'
 import {
   accessTokenValidator,
@@ -17,6 +19,7 @@ import {
   refreshTokenValidator,
   registerValidatorSchema,
   resetForgotPasswordValidator,
+  verifiedUserValidator,
   verifyEmailTokenValidator
 } from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handlers'
@@ -75,17 +78,11 @@ usersRouter.post('/forgot-password', forgotPasswordTokenValidator, wrapRequestHa
  * Method: POST
  * Body: { email:string }
  */
-usersRouter.post('/forgot-password', forgotPasswordTokenValidator, wrapRequestHandler(forgotPasswordController))
-/**
- * Description. forgot password
- * Path: /forgot-password
- * Method: POST
- * Body: { email:string }
- */
+
 usersRouter.post(
   '/verify-forgot-password',
   forgotPasswordVerifyTokenValidator,
-  wrapRequestHandler(forgotPasswordController)
+  wrapRequestHandler(verifyForgotPasswordController)
 )
 
 /**
@@ -103,4 +100,14 @@ usersRouter.post('/reset-password', resetForgotPasswordValidator, wrapRequestHan
  * Header:{Authorization: Bearer <access_token>}
  */
 usersRouter.get('/me', accessTokenValidator, wrapRequestHandler(getMeProfileControllor))
+
+/**
+ * Description: Update my profile
+ * Path: /me
+ * Method: PATCH
+ * Header: { Authorization: Bearer <access_token> }
+ * Body: UserSchema
+ */
+usersRouter.patch('/me', accessTokenValidator, verifiedUserValidator, wrapRequestHandler(updateMeController))
+
 export default usersRouter
