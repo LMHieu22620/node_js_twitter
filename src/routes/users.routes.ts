@@ -2,6 +2,7 @@ import { Request, Response, Router } from 'express'
 import {
   forgotPasswordController,
   getMeProfileControllor,
+  getProfileControllor,
   loginController,
   logoutController,
   registerController,
@@ -11,6 +12,7 @@ import {
   verifyEmailController,
   verifyForgotPasswordController
 } from '~/controllers/users.controllers'
+import { filterMiddleware } from '~/middlewares/common.middlewares'
 import {
   accessTokenValidator,
   forgotPasswordTokenValidator,
@@ -19,9 +21,11 @@ import {
   refreshTokenValidator,
   registerValidatorSchema,
   resetForgotPasswordValidator,
+  updateMeValidator,
   verifiedUserValidator,
   verifyEmailTokenValidator
 } from '~/middlewares/users.middlewares'
+import { UpdateMeReqBody } from '~/models/requests/User.request'
 import { wrapRequestHandler } from '~/utils/handlers'
 
 const usersRouter = Router()
@@ -108,6 +112,29 @@ usersRouter.get('/me', accessTokenValidator, wrapRequestHandler(getMeProfileCont
  * Header: { Authorization: Bearer <access_token> }
  * Body: UserSchema
  */
-usersRouter.patch('/me', accessTokenValidator, verifiedUserValidator, wrapRequestHandler(updateMeController))
+usersRouter.patch(
+  '/me',
+  accessTokenValidator,
+  verifiedUserValidator,
+  updateMeValidator,
+  filterMiddleware<UpdateMeReqBody>([
+    'avatar',
+    'bio',
+    'cover_photo',
+    'date_of_birth',
+    'location',
+    'name',
+    'username',
+    'website'
+  ]),
+  wrapRequestHandler(updateMeController)
+)
+
+/**
+ * Description. forgot password
+ * Path: /:username
+ * Method: get
+ */
+usersRouter.get('/:username', wrapRequestHandler(getProfileControllor))
 
 export default usersRouter
