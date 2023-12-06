@@ -31,12 +31,14 @@ export interface LogoutReqBody {
   refresh_token: string
 }
 
-export interface ForgotPassword {
-  forgot_password_token: string
+export interface Follow {
+  followed_user_id: string
 }
+
 export interface ForgotPassword {
   password: string
   confirm_password: string
+  forgot_password_token: string
 }
 export interface TokenPayload extends JwtPayload {
   user_id: string
