@@ -9,6 +9,7 @@ import {
   registerController,
   resendVerifyEmailController,
   resetForgotPasswordController,
+  unFollowController,
   updateMeController,
   verifyEmailController,
   verifyForgotPasswordController
@@ -23,6 +24,7 @@ import {
   refreshTokenValidator,
   registerValidatorSchema,
   resetForgotPasswordValidator,
+  unFollowValidator,
   updateMeValidator,
   verifiedUserValidator,
   verifyEmailTokenValidator
@@ -40,14 +42,14 @@ const usersRouter = Router()
  */
 usersRouter.post('/login', loginValidator, wrapRequestHandler(loginController))
 /*
- * Description: Login a user
+ * Description: register a user
  * Path: /register
  * Method:POST
  * Body:{email:string,password:string,confirm_password:string,date_of_birth:ISO8601}
  */
 usersRouter.post('/register', registerValidatorSchema, wrapRequestHandler(registerController))
 /*
- * Description: Login a user
+ * Description: logout a user
  * Path: /logout
  * Method:POST
  * Header:{Authorization: Bearer <access_token>}
@@ -72,17 +74,17 @@ usersRouter.post('/verify-email', verifyEmailTokenValidator, wrapRequestHandler(
 usersRouter.post('/resend-verify-email', accessTokenValidator, wrapRequestHandler(resendVerifyEmailController))
 
 /**
- * Description. forgot password
+ * Description. Submit email to reset password, send email to user
  * Path: /forgot-password
  * Method: POST
- * Body: { email:string }
+ * Body: {email: string}
  */
 usersRouter.post('/forgot-password', forgotPasswordTokenValidator, wrapRequestHandler(forgotPasswordController))
 /**
- * Description. forgot password
- * Path: /forgot-password
+ * Description. Verify link in email to reset password
+ * Path: /verify-forgot-password
  * Method: POST
- * Body: { email:string }
+ * Body: {forgot_password_token: string}
  */
 
 usersRouter.post(
@@ -92,18 +94,18 @@ usersRouter.post(
 )
 
 /**
- * Description.reset forgot password
- * Path: /forgot-password
+ * Description: Reset password
+ * Path: /reset-password
  * Method: POST
- * Body: { password:string,confirm_password:string,forgot_password_token:string }
+ * Body: {forgot_password_token: string, password: string, confirm_password: string}
  */
 usersRouter.post('/reset-password', resetForgotPasswordValidator, wrapRequestHandler(resetForgotPasswordController))
 
 /**
- * Description. forgot password
+ * Description: Get my profile
  * Path: /me
- * Method: POST
- * Header:{Authorization: Bearer <access_token>}
+ * Method: GET
+ * Header: { Authorization: Bearer <access_token> }
  */
 usersRouter.get('/me', accessTokenValidator, wrapRequestHandler(getMeProfileControllor))
 
@@ -133,17 +135,18 @@ usersRouter.patch(
 )
 
 /**
- * Description. forgot password
+ * Description: Get user profile
  * Path: /:username
- * Method: get
+ * Method: GET
  */
 usersRouter.get('/:username', wrapRequestHandler(getProfileControllor))
 
 /**
- * Description. forgot password
+ * Description: Follow someone
  * Path: /follow
  * Method: POST
- * Header:{Authorization: Bearer <access_token>}
+ * Header: { Authorization: Bearer <access_token> }
+ * Body: { followed_user_id: string }
  */
 usersRouter.post(
   '/follow',
@@ -152,5 +155,18 @@ usersRouter.post(
   followValidator,
   wrapRequestHandler(followController)
 )
-
+/**
+ * Description: unFollow someone
+ * Path: /:username
+ * Method: POST
+ * Header: { Authorization: Bearer <access_token> }
+ * Body: { followed_user_id: string }
+ */
+usersRouter.delete(
+  '/follow/:user_id',
+  accessTokenValidator,
+  verifiedUserValidator,
+  unFollowValidator,
+  wrapRequestHandler(unFollowController)
+)
 export default usersRouter

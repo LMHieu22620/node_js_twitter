@@ -8,9 +8,11 @@ import { ErrorWithStatus } from '~/models/Errors'
 import {
   Follow,
   ForgotPassword,
+  GetProfileReqParams,
   LogoutReqBody,
   RegisterReqBody,
   TokenPayload,
+  UnfollowReqParams,
   UpdateMeReqBody,
   VerifyEmailReqBody
 } from '~/models/requests/User.request'
@@ -171,7 +173,7 @@ export const getMeProfileControllor = async (
   })
 }
 
-export const getProfileControllor = async (req: Request<{ username: string }>, res: Response, next: NextFunction) => {
+export const getProfileControllor = async (req: Request<GetProfileReqParams>, res: Response, next: NextFunction) => {
   const { username } = req.params
   const user = await usersService.getProfile(username)
 
@@ -205,5 +207,12 @@ export const followController = async (
   const { user_id } = req.decoded_authorization as TokenPayload
   const { followed_user_id } = req.body
   const result = await usersService.follow(user_id, followed_user_id)
+  return res.json(result)
+}
+
+export const unFollowController = async (req: Request<UnfollowReqParams>, res: Response, next: NextFunction) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  const { user_id: followed_user_id } = req.params
+  const result = await usersService.unFollow(user_id, followed_user_id)
   return res.json(result)
 }
