@@ -157,10 +157,10 @@ usersRouter.post(
 )
 /**
  * Description: unFollow someone
- * Path: /:username
- * Method: POST
+ * Path: /follow/:user_id
+ * Method: delete
  * Header: { Authorization: Bearer <access_token> }
- * Body: { followed_user_id: string }
+ * params: { user_id: string }
  */
 usersRouter.delete(
   '/follow/:user_id',
