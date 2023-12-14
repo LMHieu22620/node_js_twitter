@@ -35,6 +35,11 @@ export interface LogoutReqBody {
 export interface Follow {
   followed_user_id: string
 }
+export interface ChangePassword {
+  old_password: string
+  password: string
+  confirm_password: string
+}
 export interface GetProfileReqParams extends ParamsDictionary {
   username: string
 }

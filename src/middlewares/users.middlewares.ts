@@ -15,7 +15,7 @@ import { verifyToken } from '~/utils/jwt'
 import { REGEX_USERNAME } from '~/utils/regex'
 import { validate } from '~/utils/validation'
 
-const password: ParamSchema = {
+const passwordSchema: ParamSchema = {
   notEmpty: {
     errorMessage: USERS_MESSAGES.PASSWORD_IS_REQUIRED
   },
@@ -259,7 +259,7 @@ export const registerValidatorSchema = validate(
           }
         }
       },
-      password: password,
+      password: passwordSchema,
       confirm_password: confirm_password,
       date_of_birth: dateOfBirthSchema
     },
@@ -421,7 +421,7 @@ export const forgotPasswordVerifyTokenValidator = validate(
 export const resetForgotPasswordValidator = validate(
   checkSchema(
     {
-      password: password,
+      password: passwordSchema,
       confirm_password: confirm_password,
       forgot_password_token: forgot_password_token
     },
@@ -537,5 +537,37 @@ export const unFollowValidator = validate(
       user_id: userIdSchema
     },
     ['params']
+  )
+)
+export const changePasswordValidator = validate(
+  checkSchema(
+    {
+      old_password: {
+        ...passwordSchema,
+        custom: {
+          options: async (value: string, { req }) => {
+            const { user_id } = req.decoded_authorization
+            const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+            if (!user) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.USER_NOT_FOUND,
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+            const { password } = user
+            const isMatch = hashPassword(value) === password
+            if (!isMatch) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.OLD_PASSWORD_NOT_MATCH,
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
+          }
+        }
+      },
+      password: passwordSchema,
+      confirm_password: confirm_password
+    },
+    ['body']
   )
 )

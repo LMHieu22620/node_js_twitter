@@ -125,7 +125,7 @@ class UsersService {
     }
   }
   async logout(refresh_token: string) {
-    const result = await databaseService.refreshTokens.deleteOne({ token: refresh_token })
+    await databaseService.refreshTokens.deleteOne({ token: refresh_token })
     return {
       message: USERS_MESSAGES.LOGOUT_SUCCESS
     }
@@ -139,7 +139,7 @@ class UsersService {
           $set: {
             email_verify_token: '',
             verify: UserVerifyStatus.Verified
-            // updated_at: new Date()
+            // updated_at: "$$NOW "
           },
           $currentDate: {
             updated_at: true
@@ -148,6 +148,12 @@ class UsersService {
       )
     ])
     const [access_token, refresh_token] = token
+    await databaseService.refreshTokens.insertOne(
+      new RefreshToken({
+        user_id: new ObjectId(user_id),
+        token: refresh_token
+      })
+    )
     return {
       access_token,
       refresh_token
@@ -323,6 +329,23 @@ class UsersService {
     })
     return {
       message: USERS_MESSAGES.UNFOLLOW_SUCCESS
+    }
+  }
+
+  async changePassword(user_id: string, new_password: string) {
+    await databaseService.users.updateOne(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          password: hashPassword(new_password)
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+    return {
+      message: USERS_MESSAGES.CHANGE_PASSWORD_SUCCESS
     }
   }
 
